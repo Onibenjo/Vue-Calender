@@ -3,6 +3,9 @@
     <v-col>
       <v-sheet height="64">
         <v-toolbar flat color="white">
+          <v-btn class="mr-4" color="primary" @click="dialog = true" dark>
+            New Event
+          </v-btn>
           <v-btn outlined class="mr-4" color="grey darken-2" @click="setToday">
             Today
           </v-btn>
@@ -45,6 +48,46 @@
           </v-menu>
         </v-toolbar>
       </v-sheet>
+      <!--  -->
+      <!-- AddEvent dislog -->
+      <v-dialog v-model="dialog" max-width="500">
+        <v-card>
+          <v-container>
+            <v-form @submit.prevent="addEvent">
+              <v-text-field
+                v-model="name"
+                type="text"
+                label="event name (required)"
+              >
+              </v-text-field>
+              <v-text-field v-model="details" type="text"> </v-text-field>
+              <v-text-field
+                v-model="start"
+                type="text"
+                label="start (required)"
+              >
+              </v-text-field>
+              <v-text-field v-model="end" type="text" label="end (required)">
+              </v-text-field>
+              <v-text-field
+                v-model="color"
+                type="color"
+                label="color (click to open color menu)"
+              >
+              </v-text-field>
+              <v-btn
+                type="submit"
+                color="primary"
+                class="mr-4"
+                @click.stop="dialog = false"
+              >
+                Create Event
+              </v-btn>
+            </v-form>
+          </v-container>
+        </v-card>
+      </v-dialog>
+      <!-- Calender -->
       <v-sheet height="500">
         <v-calendar
           ref="calendar"
@@ -205,6 +248,26 @@ export default {
     editEvent(ev) {
       this.currentlyEditing = ev.id;
     },
+    async addEvent() {
+      let { name, details, start, end, color } = this;
+      if (name && start && end) {
+        await db.collection("calenderEvent").add({
+          name,
+          details,
+          start,
+          end,
+          color
+        });
+        this.getEvents();
+        name = "";
+        details = "";
+        start = "";
+        end = "";
+        color = "#1976D2";
+      } else {
+        alert("name details, start, end, color are required");
+      }
+    },
     async updateEvent(ev) {
       await db
         .collection("calenderEvent")
@@ -223,6 +286,7 @@ export default {
       this.selectedOpen = false;
       this.getEvents();
     },
+
     showEvent({ nativeEvent, event }) {
       const open = () => {
         this.selectedEvent = event;
@@ -240,31 +304,8 @@ export default {
       nativeEvent.stopPropagation();
     },
     updateRange({ start, end }) {
-      //   const events = [];
-
-      //   const min = new Date(`${start.date}T00:00:00`);
-      //   const max = new Date(`${end.date}T23:59:59`);
-      //   const days = (max.getTime() - min.getTime()) / 86400000;
-      //   const eventCount = this.rnd(days, days + 20);
-
-      //   for (let i = 0; i < eventCount; i++) {
-      //     const allDay = this.rnd(0, 3) === 0;
-      //     const firstTimestamp = this.rnd(min.getTime(), max.getTime());
-      //     const first = new Date(firstTimestamp - (firstTimestamp % 900000));
-      //     const secondTimestamp = this.rnd(2, allDay ? 288 : 8) * 900000;
-      //     const second = new Date(first.getTime() + secondTimestamp);
-
-      //     // events.push({
-      //     //   name: this.names[this.rnd(0, this.names.length - 1)],
-      //     //   start: this.formatDate(first, !allDay),
-      //     //   end: this.formatDate(second, !allDay),
-      //     //   color: this.colors[this.rnd(0, this.colors.length - 1)]
-      //     // });
-      //   }
-
       this.start = start;
       this.end = end;
-      //   this.events = events;
     },
     nth(d) {
       return d > 3 && d < 21
